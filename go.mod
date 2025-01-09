@@ -1,6 +1,9 @@
 module github.com/soerenschneider/gollum
 
-go 1.23
+go 1.23.0
+
+toolchain go1.23.4
+
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/hashicorp/go-multierror v1.1.1
