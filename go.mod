@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/prometheus/client_golang v1.20.5
 	github.com/sourcegraph/conc v0.3.0
-	github.com/tektoncd/pipeline v0.65.2
+	github.com/tektoncd/pipeline v0.66.0
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc
 	k8s.io/api v0.32.0
 	k8s.io/apimachinery v0.32.0
