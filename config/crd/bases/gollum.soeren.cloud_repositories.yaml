@@ -52,6 +52,8 @@ spec:
                 additionalProperties:
                   type: string
                 type: object
+              cloneUsingSsh:
+                type: boolean
               memorizeReleases:
                 default: true
                 type: boolean
@@ -60,8 +62,6 @@ spec:
               pipelineRunName:
                 type: string
               repo:
-                type: string
-              url:
                 type: string
               versionFilter:
                 properties:
@@ -83,11 +83,11 @@ spec:
                 type: object
             required:
             - PipelineNames
+            - cloneUsingSsh
             - memorizeReleases
             - owner
             - pipelineRunName
             - repo
-            - url
             - workspaces
             type: object
           status:

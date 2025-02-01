@@ -20,9 +20,9 @@ func ArtifactTypes() []ArtifactType {
 
 // RepositorySpec defines the desired state of Repository.
 type RepositorySpec struct {
-	Owner      string `json:"owner"`
-	Repository string `json:"repo"`
-	URL        string `json:"url"`
+	Owner         string `json:"owner"`
+	Repository    string `json:"repo"`
+	CloneUsingSsh bool   `json:"cloneUsingSsh"`
 
 	// +kubebuilder:default:=true
 	MemorizeReleases bool `json:"memorizeReleases"`

@@ -33,7 +33,7 @@ func BuildRunRequest(tag string, namespace string, data *gollumv1alpha1.Reposito
 		PipelineRunName: pipelineRunName,
 		PipelineName:    pipelineName,
 		Params: map[string]string{
-			ArgCloneUrl: GetRepoUrl(false, data.Spec.Owner, data.Spec.Repository),
+			ArgCloneUrl: GetRepoUrl(data.Spec.CloneUsingSsh, data.Spec.Owner, data.Spec.Repository),
 			ArgRevision: tag,
 			ArgOwner:    data.Spec.Owner,
 			ArgRepo:     data.Spec.Repository,
