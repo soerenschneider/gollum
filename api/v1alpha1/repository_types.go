@@ -29,7 +29,7 @@ type RepositorySpec struct {
 
 	PipelineRunName string `json:"pipelineRunName"`
 
-	PipelineNames map[ArtifactType]string `json:"PipelineNames"`
+	PipelineNames map[ArtifactType]string `json:"pipelineNames"`
 
 	VersionFilter *VersionFilterSpec           `json:"versionFilter,omitempty"`
 	Workspaces    map[string]map[string]string `json:"workspaces"`
