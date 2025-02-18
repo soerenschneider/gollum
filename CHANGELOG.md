@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.0](https://github.com/soerenschneider/gollum/compare/v1.0.0...v1.1.0) (2025-02-18)
+
+
+### Features
+
+* feature to omit certain versions ([072cbfb](https://github.com/soerenschneider/gollum/commit/072cbfb70b097f79a0cb4ff56410dcadec208577))
+
+
+### Bug Fixes
+
+* **deps:** bump github.com/tektoncd/pipeline from 0.65.2 to 0.68.0 ([866f948](https://github.com/soerenschneider/gollum/commit/866f9487d0dc117b86037540e2ea0a4499baafe0))
+* **deps:** bump golang from 1.23.4 to 1.24.0 ([ae7794d](https://github.com/soerenschneider/gollum/commit/ae7794dba6e6a004f55568f0a71e444365e3e122))
+* **deps:** bump k8s.io/api from 0.32.0 to 0.32.2 ([d112294](https://github.com/soerenschneider/gollum/commit/d112294707356cf21326a9e8ea89e0bf94bb4523))
+* **deps:** bump k8s.io/apimachinery from 0.32.0 to 0.32.2 ([d66e277](https://github.com/soerenschneider/gollum/commit/d66e277a64c86ab6a7ddb335162eda6da86e6cf5))
+* **deps:** bump k8s.io/client-go from 0.32.0 to 0.32.2 ([35a1144](https://github.com/soerenschneider/gollum/commit/35a11445b720f5e22d38dc61ad5ac3fa82cb6174))
+
 ## 1.0.0 (2025-01-09)
 
 
