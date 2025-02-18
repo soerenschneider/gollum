@@ -21,6 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/strings/slices"
 	"knative.dev/pkg/apis"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -446,7 +447,7 @@ func (r *RepositoryReconciler) fetchArtifactDataForRelease(ctx context.Context, 
 }
 
 func (r *RepositoryReconciler) applyVersionFilter(ctx context.Context, data *gollumv1alpha1.Repository, releases []github.Release) ([]github.Release, error) {
-	if data.Spec.VersionFilter == nil {
+	if data.Spec.VersionFilter == nil && len(data.Spec.OmitVersions) == 0 {
 		return releases, nil
 	}
 	metrics.ReleasesAvailableTotal.WithLabelValues(data.Spec.Owner, data.Spec.Repository).Set(float64(len(releases)))
@@ -459,13 +460,18 @@ func (r *RepositoryReconciler) applyVersionFilter(ctx context.Context, data *gol
 	var filteredReleases []github.Release //nolint prealloc
 	var errs error
 	for _, rel := range releases {
-		matches, err := filter.Matches(rel.TagName)
-		if err != nil {
-			errs = multierror.Append(errs, err)
-			continue
+		if filter != nil {
+			matches, err := filter.Matches(rel.TagName)
+			if err != nil {
+				errs = multierror.Append(errs, err)
+				continue
+			}
+			if !matches {
+				continue
+			}
 		}
 
-		if !matches {
+		if slices.Contains(data.Spec.OmitVersions, rel.TagName) {
 			continue
 		}
 
