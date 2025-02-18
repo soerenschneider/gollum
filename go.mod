@@ -12,7 +12,7 @@ require (
 	github.com/sourcegraph/conc v0.3.0
 	github.com/tektoncd/pipeline v0.68.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
-	k8s.io/api v0.32.0
+	k8s.io/api v0.32.2
 	k8s.io/apimachinery v0.32.2
 	k8s.io/client-go v0.32.0
 	knative.dev/pkg v0.0.0-20240416145024-0f34a8815650
