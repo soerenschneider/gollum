@@ -137,6 +137,11 @@ func (in *RepositorySpec) DeepCopyInto(out *RepositorySpec) {
 		*out = new(VersionFilterSpec)
 		**out = **in
 	}
+	if in.OmitVersions != nil {
+		in, out := &in.OmitVersions, &out.OmitVersions
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Workspaces != nil {
 		in, out := &in.Workspaces, &out.Workspaces
 		*out = make(map[string]map[string]string, len(*in))
