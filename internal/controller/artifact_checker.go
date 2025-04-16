@@ -8,7 +8,7 @@ import (
 
 type DefaultReleaseArtifactChecker struct{}
 
-func (c *DefaultReleaseArtifactChecker) HasValidArtifacts(artifacts ReleaseArtifacts, artifactType gollumv1alpha1.ArtifactType) (bool, error) {
+func (c *DefaultReleaseArtifactChecker) HasValidArtifacts(artifacts *ReleaseArtifacts, artifactType gollumv1alpha1.ArtifactType) (bool, error) {
 	switch artifactType {
 	case gollumv1alpha1.ArtifactsKeyReleaseAssets:
 		return len(artifacts.Assets) > 0, nil

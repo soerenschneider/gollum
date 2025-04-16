@@ -57,7 +57,7 @@ type VersionFilter interface {
 }
 
 type ReleaseArtifactChecker interface {
-	HasValidArtifacts(artifacts ReleaseArtifacts, artifactType gollumv1alpha1.ArtifactType) (bool, error)
+	HasValidArtifacts(artifacts *ReleaseArtifacts, artifactType gollumv1alpha1.ArtifactType) (bool, error)
 }
 
 // RepositoryReconciler reconciles a Repository object
