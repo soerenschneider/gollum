@@ -4,6 +4,8 @@ go 1.23.0
 
 toolchain go1.23.4
 
+replace github.com/google/cel-go => github.com/google/cel-go v0.22.1
+
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/hashicorp/go-multierror v1.1.1
@@ -18,6 +20,7 @@ require (
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738
 	knative.dev/pkg v0.0.0-20240416145024-0f34a8815650
 	sigs.k8s.io/controller-runtime v0.20.4
+
 )
 
 require (
