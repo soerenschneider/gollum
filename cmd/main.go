@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"os"
+	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/soerenschneider/gollum/internal/github"
@@ -30,6 +31,11 @@ import (
 	// +kubebuilder:scaffold:imports
 )
 
+const (
+	defaultRequeueIntervalMin         = 60
+	defaultJitterPercentage   float64 = 20
+)
+
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
@@ -44,13 +50,20 @@ func init() {
 
 func main() {
 	var githubToken string
+	var requeueIntervalMin int
+	var jitterPercentage float64
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
 	var secureMetrics bool
 	var enableHTTP2 bool
+	var verboseLogging bool
 	var tlsOpts []func(*tls.Config)
 	flag.StringVar(&githubToken, "github-token", "", "The GitHub token to use for API calls.")
+	flag.IntVar(&requeueIntervalMin, "requeue-interval", defaultRequeueIntervalMin,
+		"The interval in minutes after which repositories are requeued.")
+	flag.Float64Var(&jitterPercentage, "jitter", defaultJitterPercentage, "The jitter for requeuing in percent.")
+	flag.BoolVar(&verboseLogging, "verbose-logging", false, "Use verbose logging.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -62,7 +75,7 @@ func main() {
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
 	opts := zap.Options{
-		Development: false,
+		Development: verboseLogging,
 	}
 	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
@@ -169,11 +182,13 @@ func main() {
 	}
 
 	if err = (&controller.RepositoryReconciler{
-		Client:         mgr.GetClient(),
-		Scheme:         mgr.GetScheme(),
-		GithubClient:   githubClient,
-		PipelineRunner: pipelineRunner,
-		Requeue:        workdayRequeue,
+		Client:                 mgr.GetClient(),
+		Scheme:                 mgr.GetScheme(),
+		GithubClient:           githubClient,
+		PipelineRunner:         pipelineRunner,
+		Requeue:                workdayRequeue,
+		DefaultRequeueInterval: time.Minute * time.Duration(requeueIntervalMin),
+		DefaultJitterPercent:   jitterPercentage,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Repository")
 		os.Exit(1)

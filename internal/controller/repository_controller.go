@@ -31,11 +31,6 @@ import (
 	gollumv1alpha1 "github.com/soerenschneider/gollum/api/v1alpha1"
 )
 
-const (
-	defaultRequeueInterval          = time.Hour
-	defaultJitterPercentage float64 = 20
-)
-
 type PipelineRunner interface {
 	GetPipeline(ctx context.Context, namespace, name string) (*pipelinev1.Pipeline, error)
 	GetPipelineRun(ctx context.Context, namespace, name string) (*pipelinev1.PipelineRun, error)
@@ -69,6 +64,9 @@ type RepositoryReconciler struct {
 	PipelineRunner PipelineRunner
 	GithubClient   GithubClient
 	Requeue        Requeue
+
+	DefaultRequeueInterval time.Duration
+	DefaultJitterPercent   float64
 }
 
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch

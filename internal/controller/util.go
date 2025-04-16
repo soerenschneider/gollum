@@ -79,7 +79,7 @@ func isPipelineRunExpired(creationDate time.Time) bool {
 func maxOrDefault(a, b time.Duration) time.Duration {
 	// both values are zero valued, return the default
 	if a == 0 && b == 0 {
-		return defaultRequeueInterval
+		return time.Hour
 	}
 
 	// both values are not zero value, return the larger
