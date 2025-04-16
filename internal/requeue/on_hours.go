@@ -5,9 +5,20 @@ import (
 	"time"
 )
 
+type timeSource interface {
+	Now() time.Time
+}
+
+type defaultTimeSource struct{}
+
+func (t *defaultTimeSource) Now() time.Time {
+	return time.Now()
+}
+
 type OnHoursRequeue struct {
-	fromHour int
-	toHour   int
+	fromHour   int
+	toHour     int
+	timeSource timeSource
 }
 
 // NewOnHoursRequeue creates a new OnHoursRequeue instance with the given time range
@@ -34,16 +45,21 @@ func NewOnHoursRequeue(from, to int) (*OnHoursRequeue, error) {
 	}
 
 	return &OnHoursRequeue{
-		fromHour: from,
-		toHour:   to,
+		fromHour:   from,
+		toHour:     to,
+		timeSource: &defaultTimeSource{},
 	}, nil
 }
 
 func (w *OnHoursRequeue) Requeue(duration time.Duration) time.Duration {
-	currentTime := time.Now().UTC().Add(duration)
+	currentTime := w.timeSource.Now().Add(duration)
 	if currentTime.Hour() < w.fromHour {
-		return time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), w.fromHour, 0, 0, 0, time.UTC).Sub(currentTime)
+		return time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), w.fromHour, 0, 0, 0, time.UTC).Sub(w.timeSource.Now())
 	}
 
-	return time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), w.fromHour, 0, 0, 0, time.UTC).AddDate(0, 0, 1).Sub(currentTime)
+	if currentTime.Hour() >= w.toHour {
+		return (time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), w.fromHour, 0, 0, 0, time.UTC).AddDate(0, 0, 1)).Sub(w.timeSource.Now())
+	}
+
+	return duration
 }
