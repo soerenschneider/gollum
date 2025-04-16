@@ -310,7 +310,7 @@ func (r *RepositoryReconciler) createRun(ctx context.Context, namespace string, 
 			hasCompleted := hasStarted && pipelineRun.Status.CompletionTime != nil
 			hasStartedRecently := time.Since(pipelineRun.Status.StartTime.Time) < 60*time.Minute
 			isSucceeded := false
-			for _, condition := range pipelineRun.Status.Status.Conditions {
+			for _, condition := range pipelineRun.Status.Conditions {
 				if condition.Type == apis.ConditionSucceeded && condition.IsTrue() {
 					isSucceeded = true
 				}
