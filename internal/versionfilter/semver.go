@@ -32,5 +32,5 @@ func (f *SemverReleaseFilter) Matches(tag string) (bool, error) {
 		return false, err
 	}
 
-	return !f.constraint.Check(version), nil
+	return f.constraint.Check(version), nil
 }
