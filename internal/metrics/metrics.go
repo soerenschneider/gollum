@@ -12,6 +12,19 @@ const (
 )
 
 var (
+	RequeueAfter = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Name:      "requeue_after_seconds",
+		Help:      "Seconds after a repo gets requeued",
+	}, []string{"owner", "repo"})
+
+	LastReleaseCheck = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Subsystem: subsystemGitHub,
+		Name:      "last_check_timestamp_seconds",
+		Help:      "Timestamp of the last check",
+	}, []string{"owner", "repo"})
+
 	FilteredReleasesTotal = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystemGitHub,
@@ -22,8 +35,8 @@ var (
 	ReleasesAvailableTotal = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: subsystemGitHub,
-		Name:      "releases_available_total",
-		Help:      "The total amount of releases for a repository",
+		Name:      "unseen_releases_total",
+		Help:      "The total amount of unseen releases for a repository",
 	}, []string{"owner", "repo"})
 
 	GithubRequestsTotal = promauto.NewCounterVec(prometheus.CounterOpts{

@@ -94,16 +94,20 @@ func (r *RepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	initStatus(data)
 
 	if err := r.checkIfPipelineExists(ctx, data, req.Namespace); err != nil {
-		logger.Error(err, "could not find desired pipeline, make sure to install it first")
-		return ctrl.Result{RequeueAfter: requeue.JitterPercentageAdditive(r.Requeue.Requeue(defaultRequeueInterval), defaultJitterPercentage)}, nil
+		requeueAfter := requeue.JitterPercentageAdditive(r.Requeue.Requeue(r.DefaultRequeueInterval), r.DefaultJitterPercent)
+		metrics.RequeueAfter.WithLabelValues(data.Spec.Owner, data.Spec.Repository).Set(requeueAfter.Seconds())
+		logger.Error(err, "could not find desired pipeline, make sure to install it first", "owner", data.Spec.Owner, "repo", data.Spec.Repository, "requeue_after", requeueAfter)
+		return ctrl.Result{RequeueAfter: requeueAfter}, nil
 	}
 
 	r.cleanupRuns(ctx, req.Namespace, data)
 
+	metrics.LastReleaseCheck.WithLabelValues(data.Spec.Owner, data.Spec.Repository).SetToCurrentTime()
 	releases, rateLimitReset, err := r.getReleasesForRepository(ctx, data)
 	if err != nil {
-		logger.Error(err, "could not get releases from Github")
-		requeueAfter := cmp.Or(rateLimitReset, requeue.JitterPercentageDistributed(r.Requeue.Requeue(defaultRequeueInterval), defaultJitterPercentage))
+		requeueAfter := cmp.Or(rateLimitReset, requeue.JitterPercentageDistributed(r.Requeue.Requeue(r.DefaultRequeueInterval), r.DefaultJitterPercent))
+		logger.Error(err, "could not get releases from Github", "requeue_after", requeueAfter)
+		metrics.RequeueAfter.WithLabelValues(data.Spec.Owner, data.Spec.Repository).Set(requeueAfter.Seconds())
 		return ctrl.Result{RequeueAfter: requeueAfter}, nil
 	}
 
@@ -111,12 +115,11 @@ func (r *RepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err != nil {
 		logger.Error(err, "filtering releases produced errors, continuing with all releases")
 	}
+	logger.Info("Found unseen release(s)", "unseen", len(releases), "filtered", len(filteredReleases), "owner", data.Spec.Owner, "repo", data.Spec.Repository)
 
 	releaseArtifacts, rateLimitReset := r.fetchArtifactDataForReleases(ctx, data, filteredReleases)
-
 	releasesWithMissingArtifacts := r.checkReleaseDataForMissingArtifacts(data, releaseArtifacts)
-	if !releasesWithMissingArtifacts {
-		logger.Info("no releases with missing artifacts available")
+	if len(releasesWithMissingArtifacts) == 0 {
 		meta.SetStatusCondition(data.GetConditions(), metav1.Condition{
 			Type:    "NoRunsNeeded",
 			Status:  metav1.ConditionTrue,
@@ -124,17 +127,23 @@ func (r *RepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 			Reason:  "NoMissingReleases",
 		})
 
-		requeueAfter := cmp.Or(rateLimitReset, requeue.JitterPercentageDistributed(r.Requeue.Requeue(defaultRequeueInterval), defaultJitterPercentage))
+		requeueAfter := cmp.Or(rateLimitReset, requeue.JitterPercentageDistributed(r.Requeue.Requeue(r.DefaultRequeueInterval), r.DefaultJitterPercent))
+		logger.Info("no releases with missing artifacts available", "owner", data.Spec.Owner, "repo", data.Spec.Repository, "requeue_after", requeueAfter)
+		metrics.RequeueAfter.WithLabelValues(data.Spec.Owner, data.Spec.Repository).Set(requeueAfter.Seconds())
 		return ctrl.Result{RequeueAfter: requeueAfter}, nil
 	}
 
-	backoffDuration, err := r.createPipelineRunsForReleases(ctx, data, releaseArtifacts, req.Namespace)
+	backoffDuration, err := r.createPipelineRunsForReleases(ctx, data, releasesWithMissingArtifacts, req.Namespace)
 	if err != nil {
-		logger.Error(err, "errors while creating pipelines for releases")
-		return ctrl.Result{RequeueAfter: maxOrDefault(rateLimitReset, backoffDuration)}, nil
+		requeueAfter := maxOrDefault(rateLimitReset, backoffDuration)
+		logger.Error(err, "errors while creating pipelines for releases", "owner", data.Spec.Owner, "repo", data.Spec.Repository, "requeue_after", requeueAfter)
+		metrics.RequeueAfter.WithLabelValues(data.Spec.Owner, data.Spec.Repository).Set(requeueAfter.Seconds())
+		return ctrl.Result{RequeueAfter: requeueAfter}, nil
 	}
 
-	return ctrl.Result{RequeueAfter: cmp.Or(rateLimitReset, r.Requeue.Requeue(requeue.JitterPercentageDistributed(defaultRequeueInterval, defaultJitterPercentage)))}, nil
+	requeueAfter := cmp.Or(rateLimitReset, requeue.JitterPercentageDistributed(r.Requeue.Requeue(r.DefaultRequeueInterval), r.DefaultJitterPercent))
+	logger.Info("finished processing repository", "owner", data.Spec.Owner, "repo", data.Spec.Repository, "requeue_after", requeueAfter)
+	return ctrl.Result{RequeueAfter: requeueAfter}, nil
 }
 
 func (r *RepositoryReconciler) checkIfPipelineExists(ctx context.Context, data *gollumv1alpha1.Repository, namespace string) error {
@@ -234,12 +243,11 @@ func (r *RepositoryReconciler) getReleasesForRepository(ctx context.Context, dat
 	return releases, time.Duration(0), nil
 }
 
-func (r *RepositoryReconciler) checkReleaseDataForMissingArtifacts(data *gollumv1alpha1.Repository, releases []ReleaseArtifacts) bool {
+func (r *RepositoryReconciler) checkReleaseDataForMissingArtifacts(data *gollumv1alpha1.Repository, releases []ReleaseArtifacts) []ReleaseArtifacts {
+	releasesWithMissingArtifacts := make([]ReleaseArtifacts, 0, len(releases))
 	var releaseAssetChecker ReleaseArtifactChecker = &DefaultReleaseArtifactChecker{}
 
-	releasesWithMissingArtifacts := false
 	for _, release := range releases {
-
 		tagName := release.Release.TagName
 		_, found := data.Status.Releases[tagName]
 		if !found {
@@ -253,12 +261,12 @@ func (r *RepositoryReconciler) checkReleaseDataForMissingArtifacts(data *gollumv
 			if !hasPipelineDefined {
 				delete(data.Status.Releases[tagName].MissingArtifacts, artifactType)
 			} else {
-				validArtifacts, _ := releaseAssetChecker.HasValidArtifacts(release, artifactType)
+				validArtifacts, _ := releaseAssetChecker.HasValidArtifacts(&release, artifactType)
 				data.Status.Releases[tagName].MissingArtifacts[artifactType] = !validArtifacts
 			}
 
 			if data.Status.Releases[tagName].MissingArtifacts[artifactType] {
-				releasesWithMissingArtifacts = true
+				releasesWithMissingArtifacts = append(releasesWithMissingArtifacts, release)
 			}
 		}
 	}
@@ -320,6 +328,7 @@ func (r *RepositoryReconciler) createRun(ctx context.Context, namespace string, 
 	logger.Info("Creating a PipelineRun request for release", "release", rel.TagName)
 	run, err := r.PipelineRunner.CreatePipelineRun(ctx, *pipelineRunRequest)
 	if err != nil {
+		metrics.PipelineRunCreationErrors.WithLabelValues(data.Spec.Owner, data.Spec.Repository, rel.TagName).Inc()
 		return 0, err
 	}
 
@@ -351,6 +360,9 @@ func (r *RepositoryReconciler) fetchArtifactDataForReleases(ctx context.Context,
 	for _, release := range releases {
 		p.Go(func(ctx context.Context) (ReleaseArtifacts, error) {
 			ret, err := r.fetchArtifactDataForRelease(ctx, data, release)
+			if err != nil {
+				log.FromContext(ctx).Error(err, "could not fetch artifact for release")
+			}
 			if ret != nil {
 				return *ret, err
 			}
@@ -458,15 +470,10 @@ func (r *RepositoryReconciler) applyVersionFilter(ctx context.Context, data *gol
 	var filteredReleases []github.Release //nolint prealloc
 	var errs error
 	for _, rel := range releases {
-		if filter != nil {
-			matches, err := filter.Matches(rel.TagName)
-			if err != nil {
-				errs = multierror.Append(errs, err)
-				continue
-			}
-			if !matches {
-				continue
-			}
+		matches, err := filter.Matches(rel.TagName)
+		if err != nil || !matches {
+			errs = multierror.Append(errs, err)
+			continue
 		}
 
 		if slices.Contains(data.Spec.OmitVersions, rel.TagName) {
