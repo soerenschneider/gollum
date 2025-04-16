@@ -3,6 +3,7 @@ package metrics
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
 const (
@@ -67,3 +68,14 @@ var (
 		Help:      "The total amount of pipeline runs created",
 	}, []string{"owner", "repo", "ref"})
 )
+
+func init() {
+	metrics.Registry.MustRegister(RequeueAfter)
+	metrics.Registry.MustRegister(LastReleaseCheck)
+	metrics.Registry.MustRegister(FilteredReleasesTotal)
+	metrics.Registry.MustRegister(ReleasesAvailableTotal)
+	metrics.Registry.MustRegister(GithubRequestsTotal)
+	metrics.Registry.MustRegister(GithubRequestErrors)
+	metrics.Registry.MustRegister(PipelineRunCreationErrors)
+	metrics.Registry.MustRegister(PipelineRunsCreated)
+}
