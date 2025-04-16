@@ -4,7 +4,7 @@ go 1.23.0
 
 toolchain go1.23.4
 
-replace github.com/google/cel-go => github.com/google/cel-go v0.22.1
+replace github.com/google/cel-go => github.com/google/cel-go v0.24.1
 
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
