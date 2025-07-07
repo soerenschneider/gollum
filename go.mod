@@ -13,7 +13,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/sourcegraph/conc v0.3.0
 	github.com/tektoncd/pipeline v0.70.0
-	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac
+	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
 	k8s.io/api v0.33.2
 	k8s.io/apimachinery v0.33.2
 	k8s.io/client-go v0.33.2
