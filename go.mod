@@ -7,7 +7,7 @@ toolchain go1.24.4
 replace github.com/google/cel-go => github.com/google/cel-go v0.22.1
 
 require (
-	github.com/Masterminds/semver/v3 v3.3.1
+	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/prometheus/client_golang v1.22.0
