@@ -17,7 +17,7 @@ require (
 	k8s.io/api v0.33.1
 	k8s.io/apimachinery v0.33.1
 	k8s.io/client-go v0.33.1
-	k8s.io/utils v0.0.0-20241210054802-24370beab758
+	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
 	knative.dev/pkg v0.0.0-20250707031059-16de760af1ed
 	sigs.k8s.io/controller-runtime v0.20.4
 
