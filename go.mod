@@ -2,7 +2,7 @@ module github.com/soerenschneider/gollum
 
 go 1.23.0
 
-toolchain go1.23.4
+toolchain go1.24.4
 
 replace github.com/google/cel-go => github.com/google/cel-go v0.22.1
 
