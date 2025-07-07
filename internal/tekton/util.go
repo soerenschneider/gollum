@@ -27,7 +27,7 @@ func BuildRunRequest(tag string, namespace string, data *gollumv1alpha1.Reposito
 		return nil
 	}
 
-	pipelineRunName := cmp.Or(data.Spec.PipelineRunName, fmt.Sprintf("gollum-%s-%s-%s", data.Spec.Owner[0:5], data.Spec.Repository[0:5], tag))
+	pipelineRunName := cmp.Or(data.Spec.PipelineRunName, fmt.Sprintf("gollum-%s-%s-%s", safeSlice(data.Spec.Owner, 5), safeSlice(data.Spec.Repository, 5), tag))
 	return &CreatePipelineRunRequest{
 		Namespace:       namespace,
 		PipelineRunName: pipelineRunName,
@@ -40,6 +40,13 @@ func BuildRunRequest(tag string, namespace string, data *gollumv1alpha1.Reposito
 		},
 		WorkspaceBindings: data.Spec.Workspaces,
 	}
+}
+
+func safeSlice(s string, n int) string {
+	if len(s) < n {
+		return s
+	}
+	return s[:n]
 }
 
 func GetRepoUrl(sshCheckout bool, owner, repo string) string {
