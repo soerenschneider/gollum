@@ -2,7 +2,7 @@ module github.com/soerenschneider/gollum
 
 go 1.24.0
 
-toolchain go1.24.4
+toolchain go1.26.0
 
 replace github.com/google/cel-go => github.com/google/cel-go v0.25.0
 
@@ -13,14 +13,13 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/sourcegraph/conc v0.3.0
 	github.com/tektoncd/pipeline v1.2.0
-	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
 	k8s.io/api v0.33.2
 	k8s.io/apimachinery v0.33.2
 	k8s.io/client-go v0.33.2
+	k8s.io/utils v0.0.0-20250604170112-4c0f3b243397
 	knative.dev/pkg v0.0.0-20250707031059-16de760af1ed
 	sigs.k8s.io/controller-runtime v0.21.0
-
 )
 
 require (
